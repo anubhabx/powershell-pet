@@ -6,7 +6,7 @@
     ScriptsToProcess = @()
 
     # Version number of this module.
-    ModuleVersion = '1.0.0'
+    ModuleVersion = '1.1.0'
 
     # ID used to uniquely identify this module
     GUID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d'
@@ -54,7 +54,7 @@
             IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = 'Initial release of PowerShellPet - Your terminal feline overlord with sassy commentary and git integration.'
+            ReleaseNotes = 'v1.1.0 - Automatic git commit tracking now works out of the box! No extra setup needed - just install and use git normally. Lord Whiskers will automatically celebrate your commits.'
         }
     }
 }
