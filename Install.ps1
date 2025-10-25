@@ -60,9 +60,18 @@ if ($profileContent -notmatch [regex]::Escape($importStatement)) {
     # Add import statement to profile
     Add-Content -Path $PROFILE -Value "`n# PowerShellPet - Your Feline Overlord"
     Add-Content -Path $PROFILE -Value $importStatement
-    Write-Host "   ✓ Added to profile" -ForegroundColor Green
+    Add-Content -Path $PROFILE -Value "# Enable automatic git commit tracking (import git function into global scope)"
+    Add-Content -Path $PROFILE -Value 'Import-Module PowerShellPet -Function git -ErrorAction SilentlyContinue'
+    Write-Host "   ✓ Added to profile with automatic git tracking" -ForegroundColor Green
 } else {
     Write-Host "   ✓ Already in profile" -ForegroundColor Green
+    # Check if git function import exists
+    if ($profileContent -notmatch "Import-Module PowerShellPet -Function git") {
+        Write-Host "   ! Adding automatic git tracking to existing installation..." -ForegroundColor Yellow
+        Add-Content -Path $PROFILE -Value "# Enable automatic git commit tracking for PowerShellPet"
+        Add-Content -Path $PROFILE -Value 'Import-Module PowerShellPet -Function git -ErrorAction SilentlyContinue'
+        Write-Host "   ✓ Git tracking added" -ForegroundColor Green
+    }
 }
 
 Write-Host ""

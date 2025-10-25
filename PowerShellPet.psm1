@@ -269,14 +269,19 @@ function Invoke-PetCommit {
     Show-Pet -Mood "Excited" -Message (Get-PetQuote "Commit")
 }
 
-# Store original git path
+# Store original git path - find git.exe
 $script:OriginalGitPath = $null
-if (Get-Command git -CommandType Application -ErrorAction SilentlyContinue) {
-    $script:OriginalGitPath = (Get-Command git -CommandType Application).Source
+$gitExe = Get-Command git -CommandType Application -ErrorAction SilentlyContinue
+if ($gitExe) {
+    $script:OriginalGitPath = $gitExe.Source
 }
 
-# Git wrapper function
+# Git wrapper function - always define it, even if git isn't installed
 function git {
+    <#
+    .SYNOPSIS
+        Wrapper around git that automatically tracks commits in PowerShellPet
+    #>
     param(
         [Parameter(ValueFromRemainingArguments=$true)]
         [string[]]$Arguments
@@ -307,6 +312,7 @@ function git {
         $global:LASTEXITCODE = $gitExitCode
     } else {
         Write-Host "Git is not installed or not in PATH" -ForegroundColor Red
+        return 1
     }
 }
 
@@ -333,13 +339,13 @@ function Enable-PetGitTracking {
 # Export functions
 Export-ModuleMember -Function prompt, Show-PetStatus, Invoke-PetCommit, Enable-PetGitTracking, git
 
-# Module initialization
-# When module loads, create an alias that will make our git function take precedence
+# Module initialization - set up git alias to use our wrapper function
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+    # Clean up the git alias when module is removed
     Remove-Item Alias:\git -ErrorAction SilentlyContinue -Force
 }
 
-# Create an alias to force our function to be used instead of git.exe
-if ($script:OriginalGitPath -and (Get-Command git -CommandType Function -Module PowerShellPet -ErrorAction SilentlyContinue)) {
-    Set-Alias -Name git -Value PowerShellPet\git -Option AllScope -Scope Global -Force
-}
+# After module loads, the user needs to either:
+# 1. Use Import-Module PowerShellPet -Function git (to get the function in global scope)
+# 2. Or have this in their profile: Set-Alias git ((Get-Command git -Module PowerShellPet).Name) -Force
+# The Install script will handle this automatically
