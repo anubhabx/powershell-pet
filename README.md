@@ -18,13 +18,20 @@ Your terminal's new feline overlord. A PowerShell module that adds a sassy cat c
 Run the install script:
 
 ```powershell
-.\Install-PowerShellPet.ps1
+.\Install.ps1
 ```
 
 This will:
 1. Copy the module to your PowerShell modules directory
 2. Add the module to your PowerShell profile
-3. Reload your profile
+3. **Enable automatic git commit tracking** (commits are tracked automatically!)
+
+After installation, restart PowerShell or run:
+```powershell
+. $PROFILE
+```
+
+That's it! Your cat companion is ready to judge your commits! 🐈
 
 ### Manual Installation
 
