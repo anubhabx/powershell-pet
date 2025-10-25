@@ -8,7 +8,7 @@ Your terminal's new feline overlord. A PowerShell module that adds a sassy cat c
 - **Multiple Moods**: Your cat changes moods based on time of day and context (Happy, Sleepy, Coding, Grumpy, Excited, Fire)
 - **Witty Commentary**: Random sarcastic messages to keep you entertained (or humbled)
 - **Level System**: Your cat gains experience and levels up as you make commits
-- **Git Integration**: Special responses when working in git repositories
+- **Automatic Git Integration**: Automatically tracks your commits - no extra setup needed!
 - **Persistent State**: Your cat remembers everything (yes, everything)
 
 ## Installation
@@ -54,6 +54,15 @@ This will:
 
 Once installed, Lord Whiskers will automatically appear in your prompt with occasional commentary.
 
+### Automatic Git Tracking
+
+Just use git normally - Lord Whiskers will automatically celebrate your commits! 🐈
+
+```powershell
+git commit -m "Fixed the bug"
+# Lord Whiskers appears automatically!
+```
+
 ### Commands
 
 - **Show-PetStatus**: Display your cat's full status and stats
@@ -61,9 +70,8 @@ Once installed, Lord Whiskers will automatically appear in your prompt with occa
   Show-PetStatus
   ```
 
-- **Invoke-PetCommit**: Celebrate a git commit (your cat will judge it)
+- **Invoke-PetCommit**: Manually trigger a commit celebration (usually automatic)
   ```powershell
-  git commit -m "Your message"
   Invoke-PetCommit
   ```
 

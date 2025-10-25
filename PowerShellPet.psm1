@@ -269,5 +269,77 @@ function Invoke-PetCommit {
     Show-Pet -Mood "Excited" -Message (Get-PetQuote "Commit")
 }
 
+# Store original git path
+$script:OriginalGitPath = $null
+if (Get-Command git -CommandType Application -ErrorAction SilentlyContinue) {
+    $script:OriginalGitPath = (Get-Command git -CommandType Application).Source
+}
+
+# Git wrapper function
+function git {
+    param(
+        [Parameter(ValueFromRemainingArguments=$true)]
+        [string[]]$Arguments
+    )
+    
+    # Call original git executable
+    if ($script:OriginalGitPath) {
+        & $script:OriginalGitPath @Arguments
+        $gitExitCode = $LASTEXITCODE
+        
+        # If this was a successful commit, invoke the pet
+        if ($Arguments.Count -gt 0 -and $Arguments[0] -eq 'commit' -and $gitExitCode -eq 0) {
+            # Check if it was a real commit (not dry-run or amend-no-edit)
+            $isDryRun = $Arguments -contains '--dry-run' -or $Arguments -contains '-n'
+            $isAmendNoEdit = $Arguments -contains '--amend' -and $Arguments -contains '--no-edit'
+            
+            if (-not ($isDryRun -or $isAmendNoEdit)) {
+                Write-Host ""
+                try {
+                    Invoke-PetCommit
+                } catch {
+                    # Silently fail if there's an issue - don't break git workflow
+                }
+            }
+        }
+        
+        # Preserve the original exit code
+        $global:LASTEXITCODE = $gitExitCode
+    } else {
+        Write-Host "Git is not installed or not in PATH" -ForegroundColor Red
+    }
+}
+
+# Helper function to verify git tracking is enabled
+function Enable-PetGitTracking {
+    <#
+    .SYNOPSIS
+        Ensures git command wrapper is active for automatic commit tracking
+    .DESCRIPTION
+        This function verifies that the git wrapper is working. The wrapper should
+        be automatically enabled when the module is imported.
+    #>
+    
+    $gitFunc = Get-Command git -CommandType Function -ErrorAction SilentlyContinue
+    if ($gitFunc -and $gitFunc.ModuleName -eq 'PowerShellPet') {
+        Write-Host "✓ Git wrapper is active! Commits will be tracked automatically." -ForegroundColor Green
+        Write-Host "  Just use: git commit -m 'your message'" -ForegroundColor Gray
+    } else {
+        Write-Host "! Git wrapper may not be active. Trying to activate..." -ForegroundColor Yellow
+        Write-Host "  If this doesn't work, you may need to call Invoke-PetCommit manually after commits." -ForegroundColor Gray
+    }
+}
+
 # Export functions
-Export-ModuleMember -Function prompt, Show-PetStatus, Invoke-PetCommit
+Export-ModuleMember -Function prompt, Show-PetStatus, Invoke-PetCommit, Enable-PetGitTracking, git
+
+# Module initialization
+# When module loads, create an alias that will make our git function take precedence
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+    Remove-Item Alias:\git -ErrorAction SilentlyContinue -Force
+}
+
+# Create an alias to force our function to be used instead of git.exe
+if ($script:OriginalGitPath -and (Get-Command git -CommandType Function -Module PowerShellPet -ErrorAction SilentlyContinue)) {
+    Set-Alias -Name git -Value PowerShellPet\git -Option AllScope -Scope Global -Force
+}

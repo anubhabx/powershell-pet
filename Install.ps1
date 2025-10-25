@@ -71,10 +71,15 @@ Write-Host ""
 Write-Host "To start using PowerShellPet, either:" -ForegroundColor White
 Write-Host "  1. Restart your PowerShell session, or" -ForegroundColor White
 Write-Host "  2. Run: " -NoNewline -ForegroundColor White
-Write-Host ". `$PROFILE" -ForegroundColor Yellow
+Write-Host "Import-Module PowerShellPet -Force" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Features:" -ForegroundColor Cyan
+Write-Host "  ✓ Sassy cat in your prompt" -ForegroundColor White
+Write-Host "  ✓ Automatic git commit tracking (just use 'git commit' normally!)" -ForegroundColor White
+Write-Host "  ✓ Level up system" -ForegroundColor White
 Write-Host ""
 Write-Host "Commands:" -ForegroundColor Cyan
 Write-Host "  Show-PetStatus      - View your cat's status" -ForegroundColor White
-Write-Host "  Invoke-PetCommit    - Celebrate a commit" -ForegroundColor White
+Write-Host "  git commit -m '...' - Commits are tracked automatically!" -ForegroundColor White
 Write-Host ""
 Write-Host "😼 Lord Whiskers awaits your service..." -ForegroundColor Magenta

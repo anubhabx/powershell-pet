@@ -1,6 +1,9 @@
 @{
     # Script module or binary module file associated with this manifest.
     RootModule = 'PowerShellPet.psm1'
+    
+    # Scripts to run before importing this module
+    ScriptsToProcess = @()
 
     # Version number of this module.
     ModuleVersion = '1.0.0'
@@ -24,7 +27,7 @@
     PowerShellVersion = '5.1'
 
     # Functions to export from this module
-    FunctionsToExport = @('Show-PetStatus', 'Invoke-PetCommit', 'prompt')
+    FunctionsToExport = @('Show-PetStatus', 'Invoke-PetCommit', 'prompt', 'git', 'Enable-PetGitTracking')
 
     # Cmdlets to export from this module
     CmdletsToExport = @()
