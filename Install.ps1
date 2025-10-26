@@ -86,9 +86,13 @@ Write-Host "Features:" -ForegroundColor Cyan
 Write-Host "  ✓ Sassy cat in your prompt" -ForegroundColor White
 Write-Host "  ✓ Automatic git commit tracking (just use 'git commit' normally!)" -ForegroundColor White
 Write-Host "  ✓ Level up system" -ForegroundColor White
+Write-Host "  ✓ Full customization (name, sass level, frequency, emoji)" -ForegroundColor White
 Write-Host ""
-Write-Host "Commands:" -ForegroundColor Cyan
-Write-Host "  Show-PetStatus      - View your cat's status" -ForegroundColor White
-Write-Host "  git commit -m '...' - Commits are tracked automatically!" -ForegroundColor White
+Write-Host "Quick Start Commands:" -ForegroundColor Cyan
+Write-Host "  Show-PetStatus           - View your cat's status" -ForegroundColor White
+Write-Host "  Set-PetName 'New Name'   - Rename your pet" -ForegroundColor White
+Write-Host "  Set-PetSassLevel High    - Adjust sass level" -ForegroundColor White
+Write-Host "  Get-PetConfig            - View all settings" -ForegroundColor White
 Write-Host ""
 Write-Host "😼 Lord Whiskers awaits your service..." -ForegroundColor Magenta
+Write-Host "   (Or rename them to whatever you want. They'll pretend not to care.)" -ForegroundColor DarkGray

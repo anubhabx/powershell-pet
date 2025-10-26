@@ -6,7 +6,7 @@
     ScriptsToProcess = @()
 
     # Version number of this module.
-    ModuleVersion = '1.1.0'
+    ModuleVersion = '1.2.0'
 
     # ID used to uniquely identify this module
     GUID = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d'
@@ -27,7 +27,21 @@
     PowerShellVersion = '5.1'
 
     # Functions to export from this module
-    FunctionsToExport = @('Show-PetStatus', 'Invoke-PetCommit', 'prompt', 'git', 'Enable-PetGitTracking')
+    FunctionsToExport = @(
+        'Show-PetStatus', 
+        'Invoke-PetCommit', 
+        'prompt', 
+        'git', 
+        'Enable-PetGitTracking',
+        'Set-PetName',
+        'Set-PetSassLevel',
+        'Set-PetMessageFrequency',
+        'Set-PetEmoji',
+        'Set-PetPromptVisibility',
+        'Get-PetConfig',
+        'Reset-PetConfig',
+        'Reset-Pet'
+    )
 
     # Cmdlets to export from this module
     CmdletsToExport = @()
@@ -54,7 +68,7 @@
             IconUri = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = 'v1.1.0 - Automatic git commit tracking now works out of the box! No extra setup needed - just install and use git normally. Lord Whiskers will automatically celebrate your commits.'
+            ReleaseNotes = 'v1.2.0 - Added full customization support! Change your pet''s name, sass level, message frequency, and more. Use commands like Set-PetName, Set-PetSassLevel, or edit the config file directly. Fixed state file naming bug.'
         }
     }
 }

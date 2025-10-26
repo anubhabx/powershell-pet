@@ -72,9 +72,52 @@ git commit -m "Fixed the bug"
 
 ### Commands
 
+#### Status & Info
 - **Show-PetStatus**: Display your cat's full status and stats
   ```powershell
   Show-PetStatus
+  ```
+
+- **Get-PetConfig**: View current configuration
+  ```powershell
+  Get-PetConfig
+  ```
+
+#### Customization
+- **Set-PetName**: Change your pet's name
+  ```powershell
+  Set-PetName "Sir Fluffington"
+  ```
+
+- **Set-PetSassLevel**: Adjust sass level (Low, Medium, High)
+  ```powershell
+  Set-PetSassLevel High
+  ```
+
+- **Set-PetMessageFrequency**: Control how often messages appear (0-100%)
+  ```powershell
+  Set-PetMessageFrequency 25
+  ```
+
+- **Set-PetEmoji**: Use a custom emoji
+  ```powershell
+  Set-PetEmoji "🐱"
+  ```
+
+- **Set-PetPromptVisibility**: Show or hide pet in prompt
+  ```powershell
+  Set-PetPromptVisibility $false
+  ```
+
+#### Reset Options
+- **Reset-PetConfig**: Reset configuration to defaults
+  ```powershell
+  Reset-PetConfig
+  ```
+
+- **Reset-Pet**: Complete reset (state and config)
+  ```powershell
+  Reset-Pet
   ```
 
 - **Invoke-PetCommit**: Manually trigger a commit celebration (usually automatic)
@@ -84,6 +127,7 @@ git commit -m "Fixed the bug"
 
 ## Examples
 
+### Default Prompt
 ```
 🐈 ☕ Finally awake? I've been judging you for hours.
 PS C:\Projects\MyProject>
@@ -91,6 +135,50 @@ PS C:\Projects\MyProject>
 🐈 💎 I suppose your code doesn't make me want to vomit. Congrats.
 PS C:\Projects\MyProject>
 ```
+
+### Customization Examples
+```powershell
+# Make your pet less sassy
+Set-PetSassLevel Low
+
+# Rename your pet
+Set-PetName "Princess Mittens"
+
+# Make them chattier
+Set-PetMessageFrequency 30
+
+# Use a different emoji
+Set-PetEmoji "😺"
+
+# Check your settings
+Get-PetConfig
+```
+
+## Configuration & Customization
+
+PowerShellPet is fully customizable! Change your pet's name, sass level, message frequency, and more.
+
+**Quick customization:**
+```powershell
+Set-PetName "Princess Mittens"
+Set-PetSassLevel High
+Set-PetMessageFrequency 25
+```
+
+For detailed customization options, see the [Customization Guide](CUSTOMIZATION_GUIDE.md).
+
+### Config File
+
+Settings are stored in `~/.powershellpet_config.json`. You can edit this file directly or use the provided commands.
+
+**Config Options:**
+- **PetName**: Your pet's name (default: "Lord Whiskers")
+- **SassLevel**: How sassy your pet is - "Low", "Medium", or "High" (default: "Medium")
+- **MessageFrequency**: Percentage chance (0-100) to show messages in prompt (default: 15)
+- **ShowInPrompt**: Whether to show the pet emoji in your prompt (default: true)
+- **CustomEmoji**: The emoji to display (default: "🐈")
+
+See `example_config.json` for a reference configuration.
 
 ## Uninstallation
 

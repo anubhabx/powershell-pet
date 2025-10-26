@@ -1,4 +1,4 @@
-# PetPet - Your Terminal Cat Overlord
+﻿# PetPet - Your Terminal Cat Overlord
 # A fun PowerShell module that adds a cat who thinks they're a deity to your terminal
 
 # Pet ASCII art for different moods
@@ -85,10 +85,43 @@ $script:PetQuotes = @{
     )
 }
 
-# State file path
-$script:StatePath = Join-Path $env:USERPROFILE ".dragonpet_state.json"
+# State and config file paths
+$script:StatePath = Join-Path $env:USERPROFILE ".powershellpet_state.json"
+$script:ConfigPath = Join-Path $env:USERPROFILE ".powershellpet_config.json"
 
-# Initialize or load dragon state
+# Initialize or load config
+function Initialize-PetConfig {
+    if (Test-Path $script:ConfigPath) {
+        try {
+            $config = Get-Content $script:ConfigPath | ConvertFrom-Json
+            return $config
+        }
+        catch {
+            # If config file is corrupted, create new one
+            return New-PetConfig
+        }
+    }
+    else {
+        return New-PetConfig
+    }
+}
+
+function New-PetConfig {
+    return [PSCustomObject]@{
+        PetName = "Lord Whiskers"
+        SassLevel = "Medium"  # Low, Medium, High
+        MessageFrequency = 15  # Percentage chance to show messages
+        ShowInPrompt = $true
+        CustomEmoji = "🐈"
+    }
+}
+
+function Save-PetConfig {
+    param($Config)
+    $Config | ConvertTo-Json | Set-Content $script:ConfigPath
+}
+
+# Initialize or load pet state
 function Initialize-PetState {
     if (Test-Path $script:StatePath) {
         try {
@@ -106,8 +139,9 @@ function Initialize-PetState {
 }
 
 function New-PetState {
+    $config = Initialize-PetConfig
     return [PSCustomObject]@{
-        Name = "Lord Whiskers"
+        Name = $config.PetName
         Level = 1
         Commits = 0
         LastSeen = Get-Date
@@ -142,13 +176,39 @@ function Get-PetMood {
     }
 }
 
-# Get a random quote based on context
+# Get a random quote based on context and sass level
 function Get-PetQuote {
-    param($Context = "Idle")
+    param(
+        [string]$Context = "Idle",
+        [string]$SassLevel = "Medium"
+    )
 
     if ($script:PetQuotes.ContainsKey($Context)) {
         $quotes = $script:PetQuotes[$Context]
-        return $quotes | Get-Random
+        $selectedQuote = $quotes | Get-Random
+        
+        # Filter based on sass level
+        switch ($SassLevel) {
+            "Low" {
+                # Remove quotes with certain sass indicators
+                if ($selectedQuote -match "pathetic|vomit|peasant|disappointing") {
+                    # Try to get a gentler one
+                    $gentleQuotes = $quotes | Where-Object { $_ -notmatch "pathetic|vomit|peasant|disappointing" }
+                    if ($gentleQuotes) {
+                        return $gentleQuotes | Get-Random
+                    }
+                }
+            }
+            "High" {
+                # Prefer sassier quotes
+                $sassyQuotes = $quotes | Where-Object { $_ -match "pathetic|vomit|peasant|disappointing|AHAHAHA" }
+                if ($sassyQuotes) {
+                    return $sassyQuotes | Get-Random
+                }
+            }
+        }
+        
+        return $selectedQuote
     }
     return ""
 }
@@ -182,6 +242,7 @@ function Show-Pet {
 
 # Hook into the prompt
 function prompt {
+    $config = Initialize-PetConfig
     $state = Initialize-PetState
 
     # Update last seen
@@ -191,45 +252,47 @@ function prompt {
     $mood = Get-PetMood
     $state.Mood = $mood
 
-    # Occasionally show a message (15% chance for more sass)
+    # Occasionally show a message based on configured frequency
     $message = ""
     $randomChance = Get-Random -Minimum 1 -Maximum 100
 
-    if ($randomChance -le 15) {
+    if ($randomChance -le $config.MessageFrequency) {
         $hour = (Get-Date).Hour
         if ($hour -ge 6 -and $hour -lt 12) {
-            $message = Get-PetQuote "Morning"
+            $message = Get-PetQuote "Morning" $config.SassLevel
         }
-        elseif ($randomChance -le 5) {
+        elseif ($randomChance -le ($config.MessageFrequency / 3)) {
             # Extra sassy random comments
-            $message = Get-PetQuote "Random"
+            $message = Get-PetQuote "Random" $config.SassLevel
         }
         else {
-            $message = Get-PetQuote "Encouragement"
+            $message = Get-PetQuote "Encouragement" $config.SassLevel
         }
     }
 
     # Save state
     Save-PetState $state
 
-    # Show dragon (inline, small)
-    $dragonArt = $script:PetMoods[$mood]
-    $color = switch ($mood) {
-        "Happy" { "Green" }
-        "Excited" { "Yellow" }
-        "Sleepy" { "DarkGray" }
-        "Grumpy" { "Red" }
-        "Coding" { "Cyan" }
-        "Fire" { "DarkYellow" }
-        default { "White" }
-    }
+    # Only show in prompt if configured
+    if ($config.ShowInPrompt) {
+        # Show pet (inline, small)
+        $color = switch ($mood) {
+            "Happy" { "Green" }
+            "Excited" { "Yellow" }
+            "Sleepy" { "DarkGray" }
+            "Grumpy" { "Red" }
+            "Coding" { "Cyan" }
+            "Fire" { "DarkYellow" }
+            default { "White" }
+        }
 
-    # Create a compact single-line dragon
-    $compactPet = "🐈"
-    Write-Host "$compactPet " -ForegroundColor $color -NoNewline
+        # Use custom emoji from config
+        $compactPet = $config.CustomEmoji
+        Write-Host "$compactPet " -ForegroundColor $color -NoNewline
 
-    if ($message) {
-        Write-Host "$message " -ForegroundColor DarkGray
+        if ($message) {
+            Write-Host "$message " -ForegroundColor DarkGray
+        }
     }
 
     # Return the actual prompt
@@ -239,20 +302,25 @@ function prompt {
     return "> "
 }
 
-# Command to show full dragon
+# Command to show full pet status
 function Show-PetStatus {
     $state = Initialize-PetState
+    $config = Initialize-PetConfig
+    
     Write-Host "`n=== Your Feline Overlord's Status ===" -ForegroundColor Cyan
     Write-Host "Name: $($state.Name) (Yes, you must use the title)" -ForegroundColor White
     Write-Host "Level: $($state.Level) (Still leagues above you)" -ForegroundColor Yellow
     Write-Host "Commits Witnessed: $($state.Commits) (I was watching. Always watching.)" -ForegroundColor Green
+    Write-Host "Experience: $($state.Experience) / $($state.Level * 100)" -ForegroundColor Blue
     Write-Host "Current Mood: $($state.Mood)" -ForegroundColor Magenta
+    Write-Host "Sass Level: $($config.SassLevel)" -ForegroundColor DarkYellow
     Write-Host ""
-    Show-Pet -Mood $state.Mood -Message (Get-PetQuote "Random")
+    Show-Pet -Mood $state.Mood -Message (Get-PetQuote "Random" $config.SassLevel)
 }
 
 # Command to celebrate a commit
 function Invoke-PetCommit {
+    $config = Initialize-PetConfig
     $state = Initialize-PetState
     $state.Commits++
     $state.Experience += 10
@@ -261,12 +329,12 @@ function Invoke-PetCommit {
     if ($state.Experience -ge ($state.Level * 100)) {
         $state.Level++
         Write-Host "`n✨ " -NoNewline -ForegroundColor Yellow
-        Write-Host "Lord Whiskers has ascended to Level $($state.Level)!" -ForegroundColor Green
+        Write-Host "$($state.Name) has ascended to Level $($state.Level)!" -ForegroundColor Green
         Write-Host "   (You're welcome for tolerating your presence)" -ForegroundColor DarkGray
     }
 
     Save-PetState $state
-    Show-Pet -Mood "Excited" -Message (Get-PetQuote "Commit")
+    Show-Pet -Mood "Excited" -Message (Get-PetQuote "Commit" $config.SassLevel)
 }
 
 # Store original git path - find git.exe
@@ -336,8 +404,229 @@ function Enable-PetGitTracking {
     }
 }
 
+# Configuration commands
+function Set-PetName {
+    <#
+    .SYNOPSIS
+        Set your pet's name
+    .PARAMETER Name
+        The new name for your pet
+    .EXAMPLE
+        Set-PetName "Sir Fluffington"
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Name
+    )
+    
+    $config = Initialize-PetConfig
+    $config.PetName = $Name
+    Save-PetConfig $config
+    
+    # Update state with new name
+    $state = Initialize-PetState
+    $state.Name = $Name
+    Save-PetState $state
+    
+    Write-Host "✓ Your pet's name has been changed to: " -NoNewline -ForegroundColor Green
+    Write-Host $Name -ForegroundColor Cyan
+    Write-Host "  (They'll pretend they don't care, but they noticed)" -ForegroundColor DarkGray
+}
+
+function Set-PetSassLevel {
+    <#
+    .SYNOPSIS
+        Set your pet's sass level
+    .PARAMETER Level
+        The sass level: Low, Medium, or High
+    .EXAMPLE
+        Set-PetSassLevel High
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [ValidateSet("Low", "Medium", "High")]
+        [string]$Level
+    )
+    
+    $config = Initialize-PetConfig
+    $config.SassLevel = $Level
+    Save-PetConfig $config
+    
+    $response = switch ($Level) {
+        "Low" { "Your pet will be... gentler. (But still judging you)" }
+        "Medium" { "A balanced level of sass. Classic." }
+        "High" { "Maximum sass engaged. You asked for this." }
+    }
+    
+    Write-Host "✓ Sass level set to: " -NoNewline -ForegroundColor Green
+    Write-Host $Level -ForegroundColor Yellow
+    Write-Host "  $response" -ForegroundColor DarkGray
+}
+
+function Set-PetMessageFrequency {
+    <#
+    .SYNOPSIS
+        Set how often your pet shows messages
+    .PARAMETER Frequency
+        Percentage chance (1-100) to show messages in prompt
+    .EXAMPLE
+        Set-PetMessageFrequency 25
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [ValidateRange(0, 100)]
+        [int]$Frequency
+    )
+    
+    $config = Initialize-PetConfig
+    $config.MessageFrequency = $Frequency
+    Save-PetConfig $config
+    
+    Write-Host "✓ Message frequency set to: " -NoNewline -ForegroundColor Green
+    Write-Host "$Frequency%" -ForegroundColor Yellow
+    
+    if ($Frequency -eq 0) {
+        Write-Host "  (Your pet will be silent. They're plotting something...)" -ForegroundColor DarkGray
+    }
+    elseif ($Frequency -gt 50) {
+        Write-Host "  (Your pet will be VERY chatty. Hope you're ready!)" -ForegroundColor DarkGray
+    }
+}
+
+function Set-PetEmoji {
+    <#
+    .SYNOPSIS
+        Set a custom emoji for your pet
+    .PARAMETER Emoji
+        The emoji to use in the prompt
+    .EXAMPLE
+        Set-PetEmoji "🐱"
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Emoji
+    )
+    
+    $config = Initialize-PetConfig
+    $config.CustomEmoji = $Emoji
+    Save-PetConfig $config
+    
+    Write-Host "✓ Pet emoji changed to: $Emoji" -ForegroundColor Green
+    Write-Host "  (Looking good!)" -ForegroundColor DarkGray
+}
+
+function Set-PetPromptVisibility {
+    <#
+    .SYNOPSIS
+        Toggle whether the pet appears in your prompt
+    .PARAMETER Show
+        $true to show in prompt, $false to hide
+    .EXAMPLE
+        Set-PetPromptVisibility $false
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [bool]$Show
+    )
+    
+    $config = Initialize-PetConfig
+    $config.ShowInPrompt = $Show
+    Save-PetConfig $config
+    
+    if ($Show) {
+        Write-Host "✓ Your pet will appear in the prompt" -ForegroundColor Green
+    }
+    else {
+        Write-Host "✓ Your pet will be hidden from the prompt" -ForegroundColor Yellow
+        Write-Host "  (They're still watching though...)" -ForegroundColor DarkGray
+    }
+}
+
+function Get-PetConfig {
+    <#
+    .SYNOPSIS
+        Display current pet configuration
+    .EXAMPLE
+        Get-PetConfig
+    #>
+    $config = Initialize-PetConfig
+    
+    Write-Host "`n=== Pet Configuration ===" -ForegroundColor Cyan
+    Write-Host "Pet Name: " -NoNewline -ForegroundColor White
+    Write-Host $config.PetName -ForegroundColor Yellow
+    Write-Host "Sass Level: " -NoNewline -ForegroundColor White
+    Write-Host $config.SassLevel -ForegroundColor Yellow
+    Write-Host "Message Frequency: " -NoNewline -ForegroundColor White
+    Write-Host "$($config.MessageFrequency)%" -ForegroundColor Yellow
+    Write-Host "Show in Prompt: " -NoNewline -ForegroundColor White
+    Write-Host $config.ShowInPrompt -ForegroundColor Yellow
+    Write-Host "Custom Emoji: " -NoNewline -ForegroundColor White
+    Write-Host $config.CustomEmoji -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Config file: $script:ConfigPath" -ForegroundColor DarkGray
+}
+
+function Reset-PetConfig {
+    <#
+    .SYNOPSIS
+        Reset pet configuration to defaults
+    .EXAMPLE
+        Reset-PetConfig
+    #>
+    param(
+        [switch]$Force
+    )
+    
+    if (-not $Force) {
+        $confirm = Read-Host "Are you sure you want to reset all pet configuration? (y/n)"
+        if ($confirm -ne 'y') {
+            Write-Host "Reset cancelled." -ForegroundColor Yellow
+            return
+        }
+    }
+    
+    $config = New-PetConfig
+    Save-PetConfig $config
+    
+    Write-Host "✓ Pet configuration reset to defaults" -ForegroundColor Green
+    Write-Host "  (Fresh start! Your pet is back to being Lord Whiskers)" -ForegroundColor DarkGray
+}
+
+function Reset-Pet {
+    <#
+    .SYNOPSIS
+        Reset your pet completely (state and config)
+    .EXAMPLE
+        Reset-Pet
+    #>
+    param(
+        [switch]$Force
+    )
+    
+    if (-not $Force) {
+        $confirm = Read-Host "Are you sure you want to completely reset your pet? This will erase all progress! (y/n)"
+        if ($confirm -ne 'y') {
+            Write-Host "Reset cancelled." -ForegroundColor Yellow
+            return
+        }
+    }
+    
+    # Reset config
+    $config = New-PetConfig
+    Save-PetConfig $config
+    
+    # Reset state
+    $state = New-PetState
+    Save-PetState $state
+    
+    Write-Host "✓ Your pet has been completely reset" -ForegroundColor Green
+    Write-Host "  (It's like you just met. They're judging you all over again!)" -ForegroundColor DarkGray
+}
+
 # Export functions
-Export-ModuleMember -Function prompt, Show-PetStatus, Invoke-PetCommit, Enable-PetGitTracking, git
+Export-ModuleMember -Function prompt, Show-PetStatus, Invoke-PetCommit, Enable-PetGitTracking, git, `
+    Set-PetName, Set-PetSassLevel, Set-PetMessageFrequency, Set-PetEmoji, Set-PetPromptVisibility, `
+    Get-PetConfig, Reset-PetConfig, Reset-Pet
 
 # Module initialization - set up git alias to use our wrapper function
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
